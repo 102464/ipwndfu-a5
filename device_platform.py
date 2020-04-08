@@ -54,6 +54,13 @@ class DevicePlatform:
       return 't%xsi' % self.cpid
 
 all_platforms = [
+  DevicePlatform(cpid=0x8940, cprv=0x00, scep=0x10, arch='armv7', srtg='iBoot-838.3',
+    rom_base=0x3F000000, rom_size=0x10000, rom_sha1='2e62b7191e48bd7f5aacddf410094827006856ab',
+    sram_base=0x34000000, sram_size=0x40000,
+    dram_base=0x80000000,
+    nonce_length=20, sep_nonce_length=None,
+    demotion_reg=0x3F500000, # All should be the same as s5l8947
+  ),
   DevicePlatform(cpid=0x8947, cprv=0x00, scep=0x10, arch='armv7', srtg='iBoot-1458.2',
     rom_base=0x3F000000, rom_size=0x10000, rom_sha1='d9320ddd4bdb1de79ae0601f20e7db23441ab1a7',
     sram_base=0x34000000, sram_size=0x40000,
