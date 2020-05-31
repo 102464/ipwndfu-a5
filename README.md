@@ -1,3 +1,5 @@
+# NOTE A5 SUPPORT IS INCOMPLETE.
+
 ![](repo/ipwndfu.png)
 # Open-source jailbreaking tool for many iOS devices
 
